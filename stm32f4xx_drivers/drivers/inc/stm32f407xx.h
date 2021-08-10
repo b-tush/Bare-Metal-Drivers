@@ -2,7 +2,7 @@
  * stm32f407xx.h
  *
  *  Created on: 06-Aug-2021
- *      Author: tushar
+ *      Author: tushar<tushar.bhanarkar05gmail.com>
  */
 
 #ifndef INC_STM32F407XX_H_
@@ -11,6 +11,16 @@
 #include<stdint.h>
 #define __vo volatile
 
+/*
+ * Generic MACROS
+ */
+
+#define ENABLE								 1
+#define DISABLE 							 0
+#define SET 								 ENABLE
+#define RESET								 DISABLE
+#define GPIO_PIN_SET						 SET
+#define GPIO_PIN_RESET						 RESET
 
 
 /*
