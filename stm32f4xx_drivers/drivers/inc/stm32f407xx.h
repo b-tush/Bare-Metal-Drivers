@@ -7,6 +7,7 @@
 
 #ifndef INC_STM32F407XX_H_
 #define INC_STM32F407XX_H_
+
 #include<stdint.h>
 #define __vo volatile
 
@@ -151,6 +152,8 @@ typedef struct
 		 uint32_t Reserved6[2];						/*Reserved Bit 													offset=0x78-0x7c */
 	__vo uint32_t SSCGR;							/*RCC spread spectrum clock generation register  				offset=0x80 	 */
 	__vo uint32_t PLLI2SCFGR;						/*RCC PLLI2S configuration register 							offset=0x84      */
+	__vo uint32_t PLLSAICFGR;
+	__vo uint32_t DCKCFGR;
 }RCC_RegDef_t;
 
 //RCC_RegDef_t *pRCC= (RCC_RegDef_t*)0x40023800U
@@ -160,6 +163,12 @@ typedef struct
  */
 
 #define RCC 			((RCC_RegDef_t*)(RCC_BASEADDR))  /*(RCC_RegDef_t*)0x40023800U*/
+
+/*
+ * ==================================================================================
+ *  <=================Peripheral Clock Enable/Disable MACROS=======================>
+ * ==================================================================================
+ */
 
 /*
  * Clock Enable Macros for GPIOx peripherals
@@ -174,13 +183,35 @@ typedef struct
 #define GPIOH_PCLK_EN()      ( RCC->AHB1ENR | = (1<<7) )   /*Set 7th Bit of AHB1ENR register to configure GPIOH_EN */
 #define GPIOI_PCLK_EN()      ( RCC->AHB1ENR | = (1<<8) )   /*Set 8th Bit of AHB1ENR register to configure GPIOI_EN */
 
+
+/*
+ * Clock Disable Macros for GPIOx peripherals
+ */
+#define GPIOA_PCLK_DI()      ( RCC->AHB1ENR & = ~(1<<0) )   /*ReSet 0th Bit of AHB1ENR register to configure GPIOA_EN */
+#define GPIOB_PCLK_DI()      ( RCC->AHB1ENR & = ~(1<<1) )   /*ReSet 1th Bit of AHB1ENR register to configure GPIOB_EN */
+#define GPIOC_PCLK_DI()      ( RCC->AHB1ENR & = ~(1<<2) )   /*ReSet 2th Bit of AHB1ENR register to configure GPIOC_EN */
+#define GPIOD_PCLK_DI()      ( RCC->AHB1ENR & = ~(1<<3) )   /*ReSet 3th Bit of AHB1ENR register to configure GPIOD_EN */
+#define GPIOE_PCLK_DI()      ( RCC->AHB1ENR & = ~(1<<4) )   /*ReSet 4th Bit of AHB1ENR register to configure GPIOE_EN */
+#define GPIOF_PCLK_DI()      ( RCC->AHB1ENR & = ~(1<<5) )   /*ReSet 5th Bit of AHB1ENR register to configure GPIOF_EN */
+#define GPIOG_PCLK_DI()      ( RCC->AHB1ENR & = ~(1<<6) )   /*ReSet 6th Bit of AHB1ENR register to configure GPIOG_EN */
+#define GPIOH_PCLK_DI()      ( RCC->AHB1ENR & = ~(1<<7) )   /*ReSet 7th Bit of AHB1ENR register to configure GPIOH_EN */
+#define GPIOI_PCLK_DI()      ( RCC->AHB1ENR & = ~(1<<8) )   /*ReSet 8th Bit of AHB1ENR register to configure GPIOI_EN */
+
+
 /*
  * Clock Enable Macros for I2Cx Peripherals
  */
 
 #define I2C1_PCLK_EN()       ( RCC->APB1ENR | = (1<<21) )   /*Set 21th Bit of APB1ENR register to configure I2C1_EN */
 #define I2C2_PCLK_EN()       ( RCC->APB1ENR | = (1<<22) )   /*Set 22th Bit of APB1ENR register to configure I2C2_EN */
-#define I2C1_PCLK_EN()       ( RCC->APB1ENR | = (1<<23) )   /*Set 23th Bit of APB1ENR register to configure I2C3_EN */
+#define I2C3_PCLK_EN()       ( RCC->APB1ENR | = (1<<23) )   /*Set 23th Bit of APB1ENR register to configure I2C3_EN */
+
+/*
+ * Clock Disable Macros for I2Cx peripherals
+ */
+#define I2C1_PCLK_DI()       ( RCC->APB1ENR & = ~(1<<21) )   /*ReSet 21th Bit of APB1ENR register to configure I2C1_EN */
+#define I2C2_PCLK_DI()       ( RCC->APB1ENR & = ~(1<<22) )   /*ReSet 22th Bit of APB1ENR register to configure I2C2_EN */
+#define I2C3_PCLK_DI()       ( RCC->APB1ENR & = ~(1<<23) )   /*ReSet 23th Bit of APB1ENR register to configure I2C3_EN */
 
 /*
  * Clock Enable Macros for SPIx Peripherals
@@ -190,16 +221,36 @@ typedef struct
 #define SPI3_PCLK_EN()       ( RCC->APB1ENR | = (1<<15) )   /*Set 15th Bit of APB1ENR register to configure SPI3_EN */
 
 /*
+ * Clock Disable Macros for SPIx peripherals
+ */
+#define SPI1_PCLK_DI()       ( RCC->APB2ENR & = ~(1<<12) )   /*ReSet 12th Bit of APB2ENR register to configure I2C1_EN */
+#define SPI2_PCLK_DI()       ( RCC->APB1ENR & = ~(1<<14) )   /*ReSet 14th Bit of APB1ENR register to configure SPI2_EN */
+#define SPI3_PCLK_DI()       ( RCC->APB1ENR & = ~(1<<15) )   /*ReSet 15th Bit of APB1ENR register to configure SPI3_EN */
+/*
  * Clock Enable Macros for USARTx peripherals
  */
-#define USART1_PCLK_EN()
-#define USART2_PCLK_EN()
-#define USART3_PCLK_EN()
-#define USART6_PCLK_EN()
+#define USART1_PCLK_EN()     ( RCC->APB2ENR | = (1<<4)  )   /*Set 4th  Bit of APB2ENR register to configure USART1_EN */
+#define USART2_PCLK_EN()     ( RCC->APB1ENR | = (1<<17) )   /*Set 17th Bit of APB1ENR register to configure USART2_EN */
+#define USART3_PCLK_EN()	 ( RCC->APB1ENR | = (1<<18) )   /*Set 18th Bit of APB1ENR register to configure USART3_EN */
+#define USART6_PCLK_EN()     ( RCC->APB2ENR | = (1<<5)  )   /*Set 5th  Bit of APB2ENR register to configure USART6_EN */
+
+/*
+ * Clock Disable Macros for USARTx peripherals
+ */
+#define USART1_PCLK_DI()     ( RCC->APB2ENR & = ~(1<<4)  )   /*ReSet 4th  Bit of APB2ENR register to configure USART1_EN */
+#define USART2_PCLK_DI()     ( RCC->APB1ENR & = ~(1<<17) )   /*ReSet 17th Bit of APB1ENR register to configure USART2_EN */
+#define USART3_PCLK_DI()	 ( RCC->APB1ENR & = ~(1<<18) )   /*ReSet 18th Bit of APB1ENR register to configure USART3_EN */
+#define USART6_PCLK_DI()     ( RCC->APB2ENR & = ~(1<<5)  )   /*ReSet 5th  Bit of APB2ENR register to configure USART6_EN */
 
 /*
  * Clock Enable Macros for SYSCFG peripheral
  */
-#define SYSCFG()
+#define SYSCFG_PCLK_EN()             ( RCC->APB2ENR | = (1<<14) )   /*Set 14th Bit of APB2ENR register to configure SYSCFG_EN */
+
+/*
+ * Clock Disable Macros for SYSCFG peripherals
+ */
+#define SYSCFG_PCLK_DI()             ( RCC->APB2ENR & = ~(1<<14) )   /*ReSet 14th Bit of APB2ENR register to configure SYSCFG_EN */
+
 
 #endif /* INC_STM32F407XX_H_ */
