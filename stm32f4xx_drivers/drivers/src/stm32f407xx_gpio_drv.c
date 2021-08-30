@@ -97,28 +97,89 @@ void GPIO_PeriClockControl(GPIO_RegDef_t *pGPIOx, uint8_t EorD)			/* Pointer to 
 /*
  * ====================>Data Read and Write<=========_=======================
  */
+
+/****************************************************************************************************
+ * @fn      		  - GPIO_ReadFromInputPin
+ *
+ * @brief             - T
+ *
+ * @param[in]         - base address of the gpio peripheral
+ * @param[in]         - Pin Number
+ * @param[in]         -
+ *
+ * @return            -  1 or 0
+ *
+ * @Note              -  none
+ */
 uint8_t GPIO_ReadFromInputPin(GPIO_RegDef_t *pGPIOx, uint8_t PinNumber)  									/*Return type is boolen*/
 {
+  uint8_t value;
+  value = (uint8_t)((pGPIOx->IDR >> PinNumber) & 0x00000001);
+  return value;
 
 }
 
-uint16_t  GPIO_ReadFromInputPort(GPIO_RegDef_t *pGPIOx)  												    /*16 pin GPIO port*/
+/****************************************************************************************************
+ * @fn      		  - GPIO_ReadFromInputPort
+ *
+ * @brief             - GPIO IDR has 16-bit memory mapped data register,
+ * 						The data I/P through the I/O are stored into the I/P data register(IDR)
+ *
+ * @param[in]         - base address of the gpio peripheral
+ * @param[in]         -
+ * @param[in]         -
+ *
+ * @return            -
+ *
+ * @Note              -  none
+ */
+
+uint16_t  GPIO_ReadFromInputPort(GPIO_RegDef_t *pGPIOx)  										    /*16 pin GPIO port*/
 {
+uint16_t value;
+value = (uint16_t) (pGPIOx->IDR);
+return value;
 
 }
 
 void GPIO_WriteToOutputPin(GPIO_RegDef_t *pGPIOx,uint8_t PinNumber, uint8_t Value)
 {
+ if(Value == GPIO_PIN_SET)
+ {
+	 pGPIOx->ODR |= (1<<PinNumber);   /*Write 1 to the output data register at the bit field corresponding to the pin Number*/
+ }else
+ {
+	 pGPIOx->ODR &= ~(1<<PinNumber);  /*Write 0 to the output data register at the bit field corresponding to the pin Number*/
+ }
+
 
 }
+
+
+/****************************************************************************************************
+ * @fn      		  - GPIO_WriteToOutputPort
+ *
+ * @brief             - GPIO ODR has 16-bit memory mapped data register,
+ * 						The data I/P through the I/O are stored into the I/P data register(IDR)
+ *
+ * @param[in]         - base address of the gpio peripheral
+ * @param[in]         -
+ * @param[in]         -
+ *
+ * @return            -
+ *
+ * @Note              -  none
+ */
 
 
 void GPIO_WriteToOutputPort(GPIO_RegDef_t *pGPIOx, uint16_t Value)
 {
+	pGPIOx->ODR = Value;
 }
 
 void GPIO_ToggleOutputPin(GPIO_RegDef_t *pGPIOx, uint8_t PinNumber)
 {
+	pGPIOx->ODR ^= (1 << PinNumber);
 }
 
 /*********************************************************************
@@ -132,7 +193,7 @@ void GPIO_ToggleOutputPin(GPIO_RegDef_t *pGPIOx, uint8_t PinNumber)
  * 						4. Configure the OutPut type
  * 						5. Configure the Alt functionality.
  *
- * @param[in]         -
+ * @param[in]         - GPIOHandle
  * @param[in]         -
  * @param[in]         -
  *
@@ -141,7 +202,7 @@ void GPIO_ToggleOutputPin(GPIO_RegDef_t *pGPIOx, uint8_t PinNumber)
  * @Note              -
  */
 
-void GPIO_Init(GPIO_Handle_t *pGPIOHandle)																/*Parameter to GPIO Handler*/
+void GPIO_Init(GPIO_Handle_t *pGPIOHandle)																				/*Parameter to GPIO Handler*/
 {
 	uint32_t temp=0;
 	//1. Configure the mode of GPIO pin.
@@ -161,7 +222,7 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle)																/*Parameter to GPIO Ha
 	//2. Configure the Speed.
 	temp =0;
 
-		temp = ( pGPIOHandle->GPIO_PinConfig.GPIO_PinSpeed << (2 * pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber ));  /* In Pin Speed values */
+		temp = ( pGPIOHandle->GPIO_PinConfig.GPIO_PinSpeed << (2 * pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber ));  			/* In Pin Speed values */
 		pGPIOHandle->pGPIOx->OSPEEDR &= ~(0x3 << PinNo);
 		pGPIOHandle->pGPIOx->OSPEEDR |= temp; /* transfer the value to OSPEED register*/
 	temp =0;
@@ -170,7 +231,7 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle)																/*Parameter to GPIO Ha
 
 		temp = ( pGPIOHandle->GPIO_PinConfig.GPIO_PinPuPdControl << (2 * pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber ));   /*Each pin takes 2 bits that's why we are multiplying by 2*/
 		pGPIOHandle->pGPIOx->PUPDR &= ~(0x3 << PinNo);
-		pGPIOHandle->pGPIOx->PUPDR |= temp;  /*Instead assignement operator use Bitwise OR for chanfing the particular bit w/o disturbing the rest */
+		pGPIOHandle->pGPIOx->PUPDR |= temp;  																			  /*Instead assignement operator use Bitwise OR for chanfing the particular bit w/o disturbing the rest */
 
 		temp=0;
 
@@ -197,9 +258,52 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle)																/*Parameter to GPIO Ha
 
 }
 
+/*********************************************************************
+ * @fn      		  - GPIO_DeInit
+ *
+ * @brief             - Disable the GPIO peripheral
+ *
+ *
+ *
+ * @param[in]         -  GPIO_RegDef_t
+ * @param[in]         -
+ * @param[in]         -
+ *
+ * @return            -
+ *
+ * @Note              -  Using RCC AHB1RSTR regsiter we are resetting or deinitializing the GPIO peripheral
+ */
+
 void GPIO_DeInit(GPIO_RegDef_t *pGPIOx)
 {
-
+	if(pGPIOx == GPIOA)
+				{
+					GPIOA_REG_RESET();           				/*Using RCC AHB1RSTR regsiter we are resetting or deinitializing the GPIO peripheral */
+				}else if (pGPIOx == GPIOB)
+				{
+					GPIOB_REG_RESET();
+				}else if (pGPIOx == GPIOC)
+				{
+					GPIOC_REG_RESET();
+				}else if (pGPIOx == GPIOD)
+				{
+					GPIOD_REG_RESET();
+				}else if (pGPIOx == GPIOE)
+				{
+					GPIOE_REG_RESET();
+				}else if (pGPIOx == GPIOF)
+				{
+					GPIOF_REG_RESET();
+				}else if (pGPIOx == GPIOG)
+				{
+					GPIOG_REG_RESET();
+				}else if (pGPIOx == GPIOH)
+				{
+					GPIOH_REG_RESET();
+				}else if (pGPIOx == GPIOI)
+				{
+					GPIOI_REG_RESET();
+				}
 }
 
 /*
