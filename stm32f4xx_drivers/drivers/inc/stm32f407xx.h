@@ -12,6 +12,27 @@
 #define __vo volatile
 
 /*
+ * ARM Cortex M4 NVIC register ISERx and ICERx register address.
+ * Ref: https://developer.arm.com/documentation/dui0553/latest/
+ */
+
+#define NVIC_ISER0                     ( (__vo uint32_t*)0xE000E100 )
+#define NVIC_ISER1                     ( (__vo uint32_t*)0xE000E104 )
+#define NVIC_ISER2                     ( (__vo uint32_t*)0xE000E108 )
+#define NVIC_ISER3                     ( (__vo uint32_t*)0xE000E10C )
+
+
+#define NVIC_ICER0                     ( (__vo uint32_t*)0xE000E180 )
+#define NVIC_ICER1                     ( (__vo uint32_t*)0xE000E184 )
+#define NVIC_ICER2                     ( (__vo uint32_t*)0xE000E188 )
+#define NVIC_ICER3                     ( (__vo uint32_t*)0xE000E18C )
+
+/*NVIC Priority Register*/
+
+#define NVIC_PR_BASEADDR ((__vo uint32_t*)0xE000E400)
+
+#define NO_PR_BITS_IMPLEMENTED            4
+/*
  * Generic MACROS
  */
 
@@ -172,7 +193,39 @@ typedef struct
  * Peripheral definition (peripheral base address typecasted to RCC_RegDef_t)
  */
 
-#define RCC 			((RCC_RegDef_t*)(RCC_BASEADDR))  /*(RCC_RegDef_t*)0x40023800U*/
+#define RCC 			((RCC_RegDef_t*)(RCC_BASEADDR)) 			 /*(RCC_RegDef_t*)0x40023800U*/
+
+/*
+ * Peripheral register definition and structure
+ * =============================EXTI==============================
+  */
+
+typedef struct
+{
+	__vo uint32_t EXTI_IMR;                       		/*EXTI Interrupt mask register 							offset=0x00			*/
+	__vo uint32_t EXTI_EMR;                             /*Event mask register    								offset=0x04			*/
+	__vo uint32_t EXTI_RTSR;                            /*Rising trigger selection register                     offset=0x08         */
+	__vo uint32_t EXTI_FTSR;							/*Falling trigger selection register					offset=0x0c			*/
+	__vo uint32_t EXTI_SWIER;							/*Software interrupt event register						offset=0x10			*/
+	__vo uint32_t EXTI_PR;                              /*Pending register                                      offset=0x14			*/
+}EXTI_RegDef_t;
+
+#define EXTI 			((EXTI_RegDef_t*)(EXTI_BASEADDR))     	 /*(EXTI_RegDef_*)0x4001 3C00*/
+
+/*
+ * Peripheral register definition and structure
+ * =============================SYSCFG==============================
+  */
+typedef struct
+{
+	__vo uint32_t MEMRMP;                             	/*SYSCFG memory remap register 					      offset=0x00          */
+	__vo uint32_t PMC;									/*SYSCFG peripheral mode configuration register		  offset=0x04		   */
+	__vo uint32_t EXTICR[4];                            /*SYSCFG external interrupt configuration register    offset=0x08- 0x14    */
+		 uint32_t Reserved[2];							/*Reserved bit   									  offset=0x18-0x1c     */
+    __vo uint32_t CMPCR;								/*Compensation cell control register				  offset=0x20		   */
+ }SYSCFG_RegDef_t;
+
+#define SYSCFG        ((SYSCFG_RegDef_t*)(SYSCFG_BASEADDR))
 
 /*
  * ==================================================================================
@@ -255,7 +308,7 @@ typedef struct
 /*
  * Clock Enable Macros for SYSCFG peripheral
  */
-#define SYSCFG_PCLK_EN()             ( RCC->APB2ENR | = (1<<14) )   /*Set 14th Bit of APB2ENR register to configure SYSCFG_EN */
+#define SYSCFG_PCLK_EN()             ( RCC->APB2ENR |= (1<<14) )   /*Set 14th Bit of APB2ENR register to configure SYSCFG_EN */
 
 /*
  * Clock Disable Macros for SYSCFG peripherals
@@ -275,6 +328,27 @@ typedef struct
 #define GPIOH_REG_RESET()       	do { (RCC-> AHB1RSTR |= (1<<7)); (RCC-> AHB1RSTR &= ~(1<<0)); }while(0)
 #define GPIOI_REG_RESET()       	do { (RCC-> AHB1RSTR |= (1<<8)); (RCC-> AHB1RSTR &= ~(1<<0)); }while(0)
 
+
+#define GPIO_BASEADDR_TO_CODE(x)  (  (x == GPIOA) ? 0 :\
+									(x == GPIOB) ? 1 :\
+									(x == GPIOC) ? 2 :\
+									(x == GPIOD) ? 3 :\
+								    (x == GPIOE) ? 4 :\
+									(x == GPIOF) ? 5 :\
+									(x == GPIOG) ? 6 :\
+									(x == GPIOH) ? 7 :0 )
+
+
+ /*
+  * IRQ Number MACROS
+  */
+#define IRQ_NO_EXTI0			6
+#define IRQ_NO_EXTI1 			7
+#define IRQ_NO_EXTI2 			8
+#define IRQ_NO_EXTI3			9
+#define IRQ_NO_EXTI4			10
+#define IRQ_NO_EXTI9_5			23
+#define IRQ_NO_EXTI15_10		40
 
 
 #include "stm32f407xx_gpio_drv.h"

@@ -128,8 +128,11 @@ void GPIO_DeInit(GPIO_RegDef_t *pGPIOx);
  * =====================>IRQ Configuration and ISR Handling<=================
  */
 
-void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t IRQPriority, uint8_t EorD);
+void GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EorD);
+//void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t EorD);
+void GPIO_IRQPriorityConfig(uint8_t IRQNumber, uint8_t IRQPriority);
 void GPIO_IRQHandling(uint8_t PinNumber);
+
 
 
 
