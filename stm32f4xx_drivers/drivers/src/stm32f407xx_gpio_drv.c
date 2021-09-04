@@ -217,7 +217,36 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle)																				/*Parameter to GPI
 
 	else
 	{
-		//Interrupt Mode
+		if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_FT)  		 	/* Configure the Interrupt for Falling Edge*/
+		{
+			  EXTI->EXTI_FTSR |= (1 << PinNo );                                                    //Configure FTSR register
+			  //Clear the corresponding RTSR Bit
+			  EXTI->EXTI_RTSR &= ~(1 << PinNo);
+		}else if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RT) 		/* Configure the Interrupt for Rising Edge*/
+		{
+			EXTI->EXTI_RTSR |= (1 << PinNo );                                                  //Configure RTSR regsiter
+			//Clear the FTSR bit to avoid any malfunctioning
+			EXTI->EXTI_FTSR &= ~(1 << PinNo);
+		}else if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RFT)
+		{
+			//Configure the FTSR and RTSR register.
+			EXTI->EXTI_FTSR |= (1 << PinNo);
+			EXTI->EXTI_RTSR &= ~(1 << PinNo);
+
+		}
+
+		//2. COnfigure the GPIO port selection in SYSCFG_EXTICR
+		uint8_t temp1= pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber / 4;   			//4 dedicated SYSCFG_EXTICR register.
+		uint8_t temp2= pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber % 4;              // 4 bits are reserved for each EXTI section
+
+		uint8_t portcode = GPIO_BASEADDR_TO_CODE(pGPIOHandle->pGPIOx);
+		SYSCFG_PCLK_EN();
+		SYSCFG->EXTICR[temp1] =  portcode << (temp2 *4);                          // Shift to every 4bit for new section
+
+		// 3. Enable the interrupt delivery using IMR
+
+		EXTI->EXTI_IMR |= (1 << PinNo);
+
 	}
 	//2. Configure the Speed.
 	temp =0;
@@ -308,15 +337,60 @@ void GPIO_DeInit(GPIO_RegDef_t *pGPIOx)
 
 /*
  * =====================>IRQ Configuration and ISR Handling<=================
+ * Note: 81 IRQ number is Implemented in the device by the vendor
  */
 
-void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t IRQPriority, uint8_t EorD)
+void GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EorD)   // IRQ Number, Priority, Enable/Disable
 {
+	if(EorD == ENABLE)
+	{
+		if(IRQNumber <= 31)                           // Program NVIC ISER0 Register if IRQNumber less than 32   (Setting/Enabling IRQ)
+		{
+			*NVIC_ISER0  |= (1 << IRQNumber);
+
+		}else if(IRQNumber > 31 && IRQNumber < 64)    // Program NVIC ISER1 Register if IRQNumber less than 64
+		{
+			*NVIC_ISER1 |= (1 << (IRQNumber % 32));    // Mod of 32 IRQ No. will SET the Oth bit, henceforth Mod od 33 IRQ No. will set 1st Bit.
+
+		}else if(IRQNumber > 64 && IRQNumber < 96)	  // Program NVIC ISER2 Register if IRQNumber less than 96
+		{
+			*NVIC_ISER2 |= (1 << (IRQNumber % 64));    // Mod of 64 IRQ No. will SET the Oth bit, henceforth Mod od 65 IRQ No. will set 1st Bit.
+		}
+	}else
+	{
+		if(IRQNumber <= 31)                           // Program NVIC ICER0 Register if IRQNumber less than 32  (Clearing /Disabling IRQ)
+		 {
+			*NVIC_ICER0  |= (1 << IRQNumber);
+     	 }else if(IRQNumber > 31 && IRQNumber < 64)    // Program NVIC ICER1 Register if IRQNumber less than 64
+		 {
+     		*NVIC_ICER1  |= (1 << (IRQNumber %32));
+		 }else if(IRQNumber > 64 && IRQNumber < 96)	  // Program NVIC ICER2 Register if IRQNumber less than 96
+		 {
+			 *NVIC_ICER2  |= (1 << (IRQNumber %64));
+		 }
+	}
+
+}
+
+void GPIO_IRQPriorityConfig(uint8_t IRQNumber, uint8_t IRQPriority)   //Priority register Configuration
+{
+	     //1.  Finding IPR Register. e.g. (IRQNumber)/4
+	   uint8_t iprx = IRQNumber/4;
+	     //2. Finding the IPR section e.g. (IRQNumber)%4
+	   uint8_t iprx_section = IRQNumber % 4;
+	   uint8_t shift_amount = (8 * iprx_section) + (8 - NO_PR_BITS_IMPLEMENTED) ; // Each section of 8 bits. In which lower 4 bits are RESERVED and cannot be configured
+
+	   *(NVIC_PR_BASEADDR + (iprx * 4)) |= (IRQPriority << shift_amount );
 
 }
 
 void GPIO_IRQHandling(uint8_t PinNumber)
 {
-
+  //Clear the PR register corresponding to the Pin Number
+	if(EXTI->EXTI_PR & (1 << PinNumber))  // to check if bit is 0 set to 1
+	{
+		//Clear (set the PR once ISR is serviced)
+		EXTI->EXTI_PR |= (1 << PinNumber);
+	}
 }
 
